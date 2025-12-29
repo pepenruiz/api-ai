@@ -75,6 +75,58 @@ bun run start
 Verás un mensaje en la consola indicando que el servidor está corriendo, por ejemplo:
 `Server is running on http://localhost:3000`
 
+## Gestión de Servicios de IA
+
+Este proyecto utiliza un sistema de **carga dinámica** para los servicios de IA. Esto significa que no necesitas modificar el código principal para activar, desactivar o añadir nuevos servicios.
+
+### 1. Activar y Desactivar Servicios
+
+La activación de los servicios es **automática** y está basada únicamente en la presencia de sus variables de entorno en el archivo `.env`.
+
+*   **Para activar un servicio:** Simplemente añade su API Key correspondiente al archivo `.env`.
+*   **Para desactivar un servicio:** Elimina o comenta (añadiendo `#` al principio) la línea de su API Key en el archivo `.env`.
+
+### 2. Servicios Disponibles
+
+A continuación se muestra la lista de servicios soportados actualmente y la variable de entorno necesaria para activarlos:
+
+| Servicio | Variable de Entorno |
+| :--- | :--- |
+| **Groq** | `GROQ_API_KEY` |
+| **Cerebras** | `CEREBRAS_API_KEY` |
+
+### 3. Cómo añadir un nuevo servicio
+
+Gracias al patrón Factory implementado, añadir un nuevo proveedor de IA es muy sencillo:
+
+1.  Crea un nuevo archivo TypeScript (ej: `deepseek.ts`) en la carpeta `services/`.
+2.  Implementa y exporta un objeto que cumpla con la interfaz de fábrica. No necesitas registrarlo manualmente en ningún otro sitio.
+
+Ejemplo de estructura de un nuevo servicio:
+
+```typescript
+import type { AIService, ChatMessage } from '../types';
+
+// El objeto exportado PUEDE tener cualquier nombre, pero debe tener 'isEnabled' y 'create'
+export const deepseekFactory = {
+  // Define cuándo se debe activar este servicio
+  isEnabled: () => !!process.env.DEEPSEEK_API_KEY,
+
+  // Crea y devuelve la instancia del servicio
+  create: (): AIService => {
+    return {
+      name: 'DeepSeek',
+      async chat(messages: ChatMessage[]) {
+        // ... lógica de llamada a la API ...
+        // Debe devolver un AsyncIterable<string>
+      }
+    }
+  }
+}
+```
+
+El sistema detectará automáticamente el nuevo archivo, comprobará `isEnabled` y, si devuelve `true`, añadirá el servicio a la rotación.
+
 ## Tutorial
 
 Mira el video explicativo de cómo se ha creado este proyecto:
