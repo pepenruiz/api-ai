@@ -38,6 +38,13 @@ const server = Bun.serve({
       });
     }
 
+    if (req.method === 'GET' && pathname === '/v1/models') {
+      return new Response(JSON.stringify({
+        object: 'list',
+        data: [{ id: 'mi-api', object: 'model' }]
+      }), { headers: { 'Content-Type': 'application/json' } });
+    }
+
     return new Response("Not found", { status: 404 });
   }
 })
